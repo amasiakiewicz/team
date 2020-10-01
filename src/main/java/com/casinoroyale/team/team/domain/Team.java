@@ -70,7 +70,8 @@ class Team extends BaseEntity {
     }
 
     TeamQueryDto toQueryDto() {
+        final UUID teamId = getId();
         final Year establishedYear = Year.from(established);
-        return new TeamQueryDto(name, establishedYear, headCoach, stadium);
+        return new TeamQueryDto(teamId, name, establishedYear, headCoach, stadium);
     }
 }

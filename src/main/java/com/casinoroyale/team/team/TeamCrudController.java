@@ -13,9 +13,9 @@ import com.casinoroyale.team.team.dto.CreateTeamDto;
 import com.casinoroyale.team.team.dto.TeamCreatedQueryDto;
 import com.casinoroyale.team.team.dto.TeamQueryDto;
 import com.casinoroyale.team.team.dto.UpdateTeamDto;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,7 +33,6 @@ class TeamCrudController {
 
     private final TeamFacade teamFacade;
 
-    @Autowired
     TeamCrudController(final TeamFacade teamFacade) {
         this.teamFacade = teamFacade;
     }
@@ -41,7 +40,7 @@ class TeamCrudController {
     @GetMapping
     Page<TeamQueryDto> findTeams(
             @RequestParam final Set<UUID> teamIds,
-            final Pageable pageable
+            @PageableDefault(sort = { "name" }) final Pageable pageable
     ) {
         return teamFacade.findTeams(teamIds, pageable);
     }
@@ -55,7 +54,8 @@ class TeamCrudController {
     @PutMapping("/{teamId}")
     void updateTeam(
             @PathVariable final UUID teamId,
-            @Valid @RequestBody final UpdateTeamDto updateTeamDto) {
+            @Valid @RequestBody final UpdateTeamDto updateTeamDto
+    ) {
         teamFacade.updateTeam(teamId, updateTeamDto);
     }
 

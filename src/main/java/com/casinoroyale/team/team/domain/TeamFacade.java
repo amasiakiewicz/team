@@ -37,7 +37,7 @@ public class TeamFacade {
         checkArgument(teamIds != null);
 
         return teamRepository
-                .findAllByIdInOrderByName(teamIds, pageable)
+                .findAllByIdIn(teamIds, pageable)
                 .map(Team::toQueryDto);
     }
 
@@ -45,7 +45,8 @@ public class TeamFacade {
         checkArgument(createTeamDto != null);
 
         final String name = createTeamDto.getName();
-        checkState(!teamRepository.existsByName(name), format("Team %s already exists", name));
+        final boolean teamNameExists = teamRepository.existsByName(name);
+        checkState(!teamNameExists, format("Team %s already exists", name));
 
         final Team team = Team.create(createTeamDto);
         teamRepository.save(team);

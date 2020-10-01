@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 interface TeamRepository extends JpaRepository<Team, UUID> {
 
-    Page<Team> findAllByIdInOrderByName(final Iterable<UUID> ids, final Pageable pageable);
+    Page<Team> findAllByIdIn(final Iterable<UUID> ids, final Pageable pageable);
 
     boolean existsByName(final String name);
 

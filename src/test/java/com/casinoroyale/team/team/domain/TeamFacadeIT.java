@@ -3,8 +3,6 @@ package com.casinoroyale.team.team.domain;
 import static java.math.BigDecimal.valueOf;
 import static java.math.RoundingMode.HALF_UP;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration.builder;
 import static org.joda.money.CurrencyUnit.USD;
@@ -12,23 +10,15 @@ import static org.joda.money.CurrencyUnit.USD;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Year;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import com.casinoroyale.team.team.dto.CreateTeamDto;
 import com.casinoroyale.team.team.dto.TeamCreatedQueryDto;
-import com.casinoroyale.team.team.dto.TeamQueryDto;
 import com.casinoroyale.team.team.dto.UpdateTeamDto;
 import org.joda.money.Money;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 @SpringBootTest
 class TeamFacadeIT {
@@ -38,21 +28,6 @@ class TeamFacadeIT {
 
     @Autowired
     private TeamRepository teamRepository;
-
-    private Set<String> names;
-
-    @Test
-    void shouldFindTeams() {
-        //given
-        final Pageable pageable = givenPageable();
-        final Set<UUID> teamIds = givenTeamsInDb(pageable);
-
-        //when
-        final Page<TeamQueryDto> teams = teamFacade.findTeams(teamIds, pageable);
-
-        //then
-        assertThat(teams).isEqualTo(expectedTeams(pageable));
-    }
 
     @Test
     void shouldCreateTeam() {
@@ -155,45 +130,6 @@ class TeamFacadeIT {
         createTeamDto.setCommissionRate(commissionRate);
 
         return createTeamDto;
-    }
-
-    private Set<UUID> givenTeamsInDb(final Pageable pageable) {
-        final Set<UUID> teamsIds = new HashSet<>();
-        names = new HashSet<>();
-
-        for (int i = 0; i < pageable.getPageSize(); i++) {
-            final CreateTeamDto createTeamDto = new CreateTeamDto();
-            final String name = randomAlphabetic(5);
-            names.add(name);
-            createTeamDto.setName(name);
-            createTeamDto.setEstablishedYear(Year.of(1930));
-            createTeamDto.setFunds(Money.of(USD, 123456.89));
-            createTeamDto.setHeadCoach("headCoach");
-            createTeamDto.setStadium("stadium");
-            createTeamDto.setCommissionRate(valueOf(0.03));
-
-            final Team team = Team.create(createTeamDto);
-            teamRepository.save(team);
-
-            teamsIds.add(team.getId());
-        }
-
-        return teamsIds;
-    }
-
-    private PageRequest givenPageable() {
-        return PageRequest.of(0, 2);
-    }
-
-    private Page<TeamQueryDto> expectedTeams(final Pageable pageable) {
-        final List<TeamQueryDto> teams = names
-                .stream()
-                .map(name -> new TeamQueryDto(name, Year.of(1930), "headCoach", "stadium"))
-                .sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()))
-                .collect(toList());
-        final int totalNumber = names.size();
-
-        return new PageImpl<>(teams, pageable, totalNumber);
     }
 
     private Team existingTeamInDb(final TeamCreatedQueryDto teamCreatedQueryDto) {

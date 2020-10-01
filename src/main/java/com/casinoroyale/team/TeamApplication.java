@@ -13,11 +13,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.joda.money.Money;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-@EnableFeignClients
 public class TeamApplication {
 
 	public static final ZoneOffset DEFAULT_ZONE_OFFSET = ZoneOffset.UTC;

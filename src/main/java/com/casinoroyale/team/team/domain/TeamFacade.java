@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import com.casinoroyale.team.team.dto.CreateTeamDto;
 import com.casinoroyale.team.team.dto.CreateTeamNoticeDto;
+import com.casinoroyale.team.team.dto.TeamCreatedQueryDto;
 import com.casinoroyale.team.team.dto.TeamQueryDto;
 import com.casinoroyale.team.team.dto.UpdateTeamDto;
 import lombok.AllArgsConstructor;
@@ -40,7 +41,7 @@ public class TeamFacade {
                 .map(Team::toQueryDto);
     }
 
-    public UUID createTeam(final CreateTeamDto createTeamDto) {
+    public TeamCreatedQueryDto createTeam(final CreateTeamDto createTeamDto) {
         checkArgument(createTeamDto != null);
 
         final String name = createTeamDto.getName();
@@ -53,7 +54,8 @@ public class TeamFacade {
         final CreateTeamNoticeDto createTeamNoticeDto = team.toCreateNoticeDto(funds);
         kafkaTemplate.send(TEAM_CREATED_TOPIC, "", createTeamNoticeDto);
 
-        return team.getId();
+        final UUID teamId = team.getId();
+        return new TeamCreatedQueryDto(teamId);
     }
 
     public void updateTeam(final UUID teamId, final UpdateTeamDto updateTeamDto) {

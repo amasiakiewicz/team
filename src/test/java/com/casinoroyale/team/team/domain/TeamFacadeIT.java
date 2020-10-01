@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.casinoroyale.team.team.dto.CreateTeamDto;
+import com.casinoroyale.team.team.dto.TeamCreatedQueryDto;
 import com.casinoroyale.team.team.dto.TeamQueryDto;
 import com.casinoroyale.team.team.dto.UpdateTeamDto;
 import org.joda.money.Money;
@@ -64,10 +65,10 @@ class TeamFacadeIT {
         final CreateTeamDto createTeamDto = givenCreateTeamDto(name, establishedYear, headCoach, stadium, commissionRate);
 
         //when
-        final UUID savedTeamId = teamFacade.createTeam(createTeamDto);
+        final TeamCreatedQueryDto createdTeam = teamFacade.createTeam(createTeamDto);
 
         //then
-        assertThat(existingTeamInDb(savedTeamId))
+        assertThat(existingTeamInDb(createdTeam))
                 .usingRecursiveComparison(builder().withIgnoredFields("id", "version", "createdDateTime").build())
                 .isEqualTo(expectedTeam(name, establishedYear, headCoach, stadium, commissionRate));
     }
@@ -193,6 +194,11 @@ class TeamFacadeIT {
         final int totalNumber = names.size();
 
         return new PageImpl<>(teams, pageable, totalNumber);
+    }
+
+    private Team existingTeamInDb(final TeamCreatedQueryDto teamCreatedQueryDto) {
+        final UUID teamId = teamCreatedQueryDto.getTeamId();
+        return existingTeamInDb(teamId);
     }
 
     private Team existingTeamInDb(final UUID teamId) {

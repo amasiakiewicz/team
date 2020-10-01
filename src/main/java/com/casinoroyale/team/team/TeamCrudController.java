@@ -10,6 +10,7 @@ import javax.validation.Valid;
 
 import com.casinoroyale.team.team.domain.TeamFacade;
 import com.casinoroyale.team.team.dto.CreateTeamDto;
+import com.casinoroyale.team.team.dto.TeamCreatedQueryDto;
 import com.casinoroyale.team.team.dto.TeamQueryDto;
 import com.casinoroyale.team.team.dto.UpdateTeamDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,7 @@ class TeamCrudController {
 
     @ResponseStatus(CREATED)
     @PostMapping
-    UUID createTeam(@Valid @RequestBody final CreateTeamDto createTeamDto) {
+    TeamCreatedQueryDto createTeam(@Valid @RequestBody final CreateTeamDto createTeamDto) {
         return teamFacade.createTeam(createTeamDto);
     }
 

@@ -26,7 +26,7 @@ public class UpdateTeamDto {
     @NotNull(message = "commissionRate.required")
     @Digits(integer = 1, fraction = 4, message = "commissionRate.format")
     @DecimalMin(value = "0.0", message = "commissionRate.min")
-    @DecimalMax(value = "1.0", message = "commissionRate.max")
+    @DecimalMax(value = "0.1", message = "commissionRate.max")
     private BigDecimal commissionRate;
 
 }

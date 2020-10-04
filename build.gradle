@@ -43,6 +43,7 @@ dependencies {
 	compile 'org.apache.commons:commons-lang3:3.11'
 	compile group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
 	compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0'
+	compile 'org.jadira.usertype:usertype.core:7.0.0.CR1'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'org.postgresql:postgresql'

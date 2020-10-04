@@ -10,7 +10,6 @@ import javax.validation.Valid;
 
 import com.casinoroyale.team.team.domain.TeamFacade;
 import com.casinoroyale.team.team.dto.CreateTeamDto;
-import com.casinoroyale.team.team.dto.TeamCreatedQueryDto;
 import com.casinoroyale.team.team.dto.TeamQueryDto;
 import com.casinoroyale.team.team.dto.UpdateTeamDto;
 import org.springframework.data.domain.Page;
@@ -38,25 +37,25 @@ class TeamCrudController {
     }
 
     @GetMapping
-    Page<TeamQueryDto> findTeams(
-            @RequestParam final Set<UUID> teamIds,
+    Page<TeamQueryDto> findTeamsByPlayers(
+            @RequestParam final Set<UUID> playerIds,
             @PageableDefault(sort = { "name" }) final Pageable pageable
     ) {
-        return teamFacade.findTeams(teamIds, pageable);
+        return teamFacade.findTeamsByPlayers(playerIds, pageable);
     }
 
     @ResponseStatus(CREATED)
     @PostMapping
-    TeamCreatedQueryDto createTeam(@Valid @RequestBody final CreateTeamDto createTeamDto) {
+    TeamQueryDto createTeam(@Valid @RequestBody final CreateTeamDto createTeamDto) {
         return teamFacade.createTeam(createTeamDto);
     }
 
     @PutMapping("/{teamId}")
-    void updateTeam(
+    TeamQueryDto updateTeam(
             @PathVariable final UUID teamId,
             @Valid @RequestBody final UpdateTeamDto updateTeamDto
     ) {
-        teamFacade.updateTeam(teamId, updateTeamDto);
+        return teamFacade.updateTeam(teamId, updateTeamDto);
     }
 
     @ResponseStatus(NO_CONTENT)

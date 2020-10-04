@@ -11,9 +11,9 @@ import java.util.UUID;
 
 import com.casinoroyale.team.team.dto.CreateTeamDto;
 import com.casinoroyale.team.team.dto.CreateTeamNoticeDto;
-import com.casinoroyale.team.team.dto.TeamCreatedQueryDto;
 import com.casinoroyale.team.team.dto.TeamQueryDto;
 import com.casinoroyale.team.team.dto.UpdateTeamDto;
+import com.casinoroyale.transfer.team.dto.FeePlayerTransferredNoticeDto;
 import lombok.AllArgsConstructor;
 import org.joda.money.Money;
 import org.springframework.data.domain.Page;
@@ -33,15 +33,15 @@ public class TeamFacade {
 
     private final KafkaTemplate<Object, Object> kafkaTemplate;
 
-    public Page<TeamQueryDto> findTeams(final Set<UUID> teamIds, final Pageable pageable) {
-        checkArgument(teamIds != null);
+    public Page<TeamQueryDto> findTeamsByPlayers(final Set<UUID> playerIds, final Pageable pageable) {
+        checkArgument(playerIds != null);
 
         return teamRepository
-                .findAllByIdIn(teamIds, pageable)
+                .findAllByPlayerIdIn(playerIds, pageable)
                 .map(Team::toQueryDto);
     }
 
-    public TeamCreatedQueryDto createTeam(final CreateTeamDto createTeamDto) {
+    public TeamQueryDto createTeam(final CreateTeamDto createTeamDto) {
         checkArgument(createTeamDto != null);
 
         final String name = createTeamDto.getName();
@@ -55,11 +55,10 @@ public class TeamFacade {
         final CreateTeamNoticeDto createTeamNoticeDto = team.toCreateNoticeDto(funds);
         kafkaTemplate.send(TEAM_CREATED_TOPIC, "", createTeamNoticeDto);
 
-        final UUID teamId = team.getId();
-        return new TeamCreatedQueryDto(teamId);
+        return team.toQueryDto();
     }
 
-    public void updateTeam(final UUID teamId, final UpdateTeamDto updateTeamDto) {
+    public TeamQueryDto updateTeam(final UUID teamId, final UpdateTeamDto updateTeamDto) {
         checkArgument(teamId != null);
         checkArgument(updateTeamDto != null);
 
@@ -68,6 +67,8 @@ public class TeamFacade {
 
         final BigDecimal newCommissionRate = updateTeamDto.getCommissionRate();
         kafkaTemplate.send(TEAM_UPDATED_TOPIC, teamId, newCommissionRate);
+
+        return team.toQueryDto();
     }
 
     public void deleteTeam(final UUID teamId) {
@@ -77,6 +78,22 @@ public class TeamFacade {
         teamRepository.delete(team);
 
         kafkaTemplate.send(TEAM_DELETED_TOPIC, "", teamId);
+    }
+
+    public void updateFunds(final FeePlayerTransferredNoticeDto feePlayerTransferredNoticeDto) {
+        checkArgument(feePlayerTransferredNoticeDto != null);
+
+        final UUID sellerTeamId = feePlayerTransferredNoticeDto.getSellerTeamId();
+        final Money sellerTeamFunds = feePlayerTransferredNoticeDto.getSellerTeamFunds();
+
+        final Team sellerTeam = findTeam(sellerTeamId);
+        sellerTeam.updateFunds(sellerTeamFunds);
+
+        final UUID buyerTeamId = feePlayerTransferredNoticeDto.getBuyerTeamId();
+        final Money buyerTeamFunds = feePlayerTransferredNoticeDto.getBuyerTeamFunds();
+
+        final Team buyerTeam = findTeam(buyerTeamId);
+        buyerTeam.updateFunds(buyerTeamFunds);
     }
 
     private Team findTeam(final UUID teamId) {

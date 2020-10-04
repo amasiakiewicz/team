@@ -9,6 +9,7 @@ import java.time.Year;
 import java.util.UUID;
 
 import javax.persistence.Access;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 
 import com.casinoroyale.team.infrastructure.BaseEntity;
@@ -19,6 +20,8 @@ import com.casinoroyale.team.team.dto.UpdateTeamDto;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.Type;
 import org.joda.money.Money;
 
 @Entity
@@ -32,6 +35,10 @@ class Team extends BaseEntity {
 
     private LocalDate established;
 
+    @Columns(columns = { @Column(name = "fundsCurrency"), @Column(name = "fundsAmount") })
+    @Type(type = "org.jadira.usertype.moneyandcurrency.joda.PersistentMoneyAmountAndCurrency")
+    private Money funds;
+
     private String headCoach;
 
     private String stadium;
@@ -43,24 +50,11 @@ class Team extends BaseEntity {
         return new Team(
                 createTeamDto.getName(),
                 established,
+                createTeamDto.getFunds(),
                 createTeamDto.getHeadCoach(),
                 createTeamDto.getStadium(),
                 createTeamDto.getCommissionRate()
         );
-    }
-
-    Team(final UUID id, final String name, final LocalDate established, final String headCoach, final String stadium, final BigDecimal commissionRate) {
-        super(id);
-        this.name = name;
-        this.established = established;
-        this.headCoach = headCoach;
-        this.stadium = stadium;
-        this.commissionRate = commissionRate;
-    }
-
-    CreateTeamNoticeDto toCreateNoticeDto(final Money funds) {
-        final UUID teamId = getId();
-        return new CreateTeamNoticeDto(teamId, commissionRate, funds);
     }
 
     void update(final UpdateTeamDto updateTeamDto) {
@@ -69,9 +63,20 @@ class Team extends BaseEntity {
         commissionRate = updateTeamDto.getCommissionRate();
     }
 
+    void updateFunds(final Money funds) {
+        this.funds = funds;
+    }
+
+    CreateTeamNoticeDto toCreateNoticeDto(final Money funds) {
+        final UUID teamId = getId();
+        return new CreateTeamNoticeDto(teamId, commissionRate, funds);
+    }
+
     TeamQueryDto toQueryDto() {
         final UUID teamId = getId();
         final Year establishedYear = Year.from(established);
-        return new TeamQueryDto(teamId, name, establishedYear, headCoach, stadium);
+        final BigDecimal commissionRateStriped = commissionRate.stripTrailingZeros();
+
+        return new TeamQueryDto(teamId, name, establishedYear, funds, headCoach, stadium, commissionRateStriped);
     }
 }

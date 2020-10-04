@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.Set;
 import java.util.UUID;
 
+import com.casinoroyale.team.player.domain.PlayerFacade;
 import com.casinoroyale.team.team.dto.CreateTeamDto;
 import com.casinoroyale.team.team.dto.CreateTeamNoticeDto;
 import com.casinoroyale.team.team.dto.TeamQueryDto;
@@ -32,6 +33,8 @@ public class TeamFacade {
     private final TeamRepository teamRepository;
 
     private final KafkaTemplate<Object, Object> kafkaTemplate;
+
+    private final PlayerFacade playerFacade;
 
     public Page<TeamQueryDto> findTeamsByPlayers(final Set<UUID> playerIds, final Pageable pageable) {
         checkArgument(playerIds != null);
@@ -80,20 +83,23 @@ public class TeamFacade {
         kafkaTemplate.send(TEAM_DELETED_TOPIC, "", teamId);
     }
 
-    public void updateFunds(final FeePlayerTransferredNoticeDto feePlayerTransferredNoticeDto) {
+    public void updateFundsAndPlayer(final FeePlayerTransferredNoticeDto feePlayerTransferredNoticeDto) {
         checkArgument(feePlayerTransferredNoticeDto != null);
 
         final UUID sellerTeamId = feePlayerTransferredNoticeDto.getSellerTeamId();
-        final Money sellerTeamFunds = feePlayerTransferredNoticeDto.getSellerTeamFunds();
+        final UUID buyerTeamId = feePlayerTransferredNoticeDto.getBuyerTeamId();
 
         final Team sellerTeam = findTeam(sellerTeamId);
-        sellerTeam.updateFunds(sellerTeamFunds);
+        final Team buyerTeam = findTeam(buyerTeamId);
 
-        final UUID buyerTeamId = feePlayerTransferredNoticeDto.getBuyerTeamId();
+        final Money sellerTeamFunds = feePlayerTransferredNoticeDto.getSellerTeamFunds();
         final Money buyerTeamFunds = feePlayerTransferredNoticeDto.getBuyerTeamFunds();
 
-        final Team buyerTeam = findTeam(buyerTeamId);
+        final UUID playerId = feePlayerTransferredNoticeDto.getPlayerId();
+
+        sellerTeam.updateFunds(sellerTeamFunds);
         buyerTeam.updateFunds(buyerTeamFunds);
+        playerFacade.updatePlayer(playerId, buyerTeamId);
     }
 
     private Team findTeam(final UUID teamId) {

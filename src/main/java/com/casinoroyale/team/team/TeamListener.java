@@ -18,7 +18,7 @@ class TeamListener {
     @KafkaListener(topics = "FeeAndPlayerTransferred")
     public void listenTransferred(ConsumerRecord<String, FeePlayerTransferredNoticeDto> kafkaMessage) {
         final FeePlayerTransferredNoticeDto feePlayerTransferredNoticeDto = kafkaMessage.value();
-        teamFacade.updateFunds(feePlayerTransferredNoticeDto);
+        teamFacade.updateFundsAndPlayer(feePlayerTransferredNoticeDto);
     }
 
 }

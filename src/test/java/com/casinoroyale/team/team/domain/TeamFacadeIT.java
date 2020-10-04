@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.casinoroyale.player.player.dto.CreatePlayerNoticeDto;
 import com.casinoroyale.team.player.domain.PlayerFacade;
+import com.casinoroyale.team.player.domain.TestPlayerFacade;
 import com.casinoroyale.team.team.dto.CreateTeamDto;
 import com.casinoroyale.team.team.dto.TeamQueryDto;
 import com.casinoroyale.team.team.dto.UpdateTeamDto;
@@ -47,6 +48,9 @@ class TeamFacadeIT {
 
     @Autowired
     private PlayerFacade playerFacade;
+
+    @Autowired
+    private TestPlayerFacade testPlayerFacade;
 
     @Test
     void shouldFindTeamsByPlayers() {
@@ -126,7 +130,7 @@ class TeamFacadeIT {
     }
 
     @Test
-    void shouldUpdateFunds() {
+    void shouldUpdateFundsAndPlayer() {
         //given
         final Money oldSellerTeamFunds = Money.of(USD, 20.15);
         final Money oldBuyerTeamFunds = Money.of(EUR, 185.35);
@@ -137,15 +141,17 @@ class TeamFacadeIT {
         final Money newSellerTeamFunds = Money.of(USD, 120.15);
         final Money newBuyerTeamFunds = Money.of(EUR, 789.12);
 
-        final FeePlayerTransferredNoticeDto feePlayerTransferredNoticeDto = givenFeePlayerTransferredNoticeDto(
-                newSellerTeamFunds, newBuyerTeamFunds, sellerTeamId, buyerTeamId
+        final UUID playerId = givenPlayerInDbInTeam(sellerTeamId);
+
+        final FeePlayerTransferredNoticeDto feePlayerTransferredNoticeDto = new FeePlayerTransferredNoticeDto(
+                newSellerTeamFunds, newBuyerTeamFunds, sellerTeamId, buyerTeamId, playerId
         );
 
         //when
-        teamFacade.updateFunds(feePlayerTransferredNoticeDto);
+        teamFacade.updateFundsAndPlayer(feePlayerTransferredNoticeDto);
 
         //then
-        assertThatTeamsHaveFunds(sellerTeamId, buyerTeamId, newSellerTeamFunds, newBuyerTeamFunds);
+        assertThatFundsAndPlayerChanged(sellerTeamId, buyerTeamId, newSellerTeamFunds, newBuyerTeamFunds, playerId);
     }
 
     private Page<TeamQueryDto> expectedTeams(final Pageable pageable, final UUID... teamIds) {
@@ -175,19 +181,18 @@ class TeamFacadeIT {
         return playerId;
     }
 
-    private FeePlayerTransferredNoticeDto givenFeePlayerTransferredNoticeDto(
-            final Money sellerTeamFunds, final Money buyerTeamFunds, final UUID sellerTeamId, final UUID buyerTeamId
+    private void assertThatFundsAndPlayerChanged(
+            final UUID sellerTeamId, final UUID buyerTeamId, final Money sellerTeamFunds, final Money buyerTeamFunds,
+            final UUID playerId
     ) {
-        final UUID playerId = randomUUID();
-        return new FeePlayerTransferredNoticeDto(sellerTeamFunds, buyerTeamFunds, sellerTeamId, buyerTeamId, playerId);
-    }
-
-    private void assertThatTeamsHaveFunds(final UUID sellerTeamId, final UUID buyerTeamId, final Money sellerTeamFunds, final Money buyerTeamFunds) {
         final TeamQueryDto sellerTeam = existingTeamInDb(sellerTeamId);
         assertThat(sellerTeam.getFunds()).isEqualTo(sellerTeamFunds);
 
         final TeamQueryDto buyerTeam = existingTeamInDb(buyerTeamId);
         assertThat(buyerTeam.getFunds()).isEqualTo(buyerTeamFunds);
+
+        final UUID playersTeamId = testPlayerFacade.findTeamByPlayer(playerId);
+        assertThat(playersTeamId).isEqualTo(buyerTeamId);
     }
 
     private void doesntExistInDb(final UUID teamId) {
